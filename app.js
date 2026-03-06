@@ -1,3 +1,6 @@
+<script src="firebase.js"></script>
+<script src="app.js"></script>
+
 
 const baby = {
 
@@ -127,7 +130,7 @@ const nowClick = Date.now()
 
 if(nowClick - lastClickTime < 10000){
 
-alert("剛剛已記錄，請稍後再按")
+alert("剛剛已記錄")
 
 return
 
@@ -139,16 +142,6 @@ if(!confirm("確定記錄餵奶時間？")) return
 
 const now=new Date()
 
-document.getElementById("lastFeed").innerText=
-formatTime(now)
-
-const next=new Date(
-now.getTime()+baby.interval*60*60*1000
-)
-
-document.getElementById("nextFeed").innerText=
-formatTime(next)
-
 feedingHistory.push({
 
 time:now,
@@ -158,6 +151,8 @@ amount:calculateMilk()
 })
 
 updateHistory()
+
+render()
 
 }
 
@@ -230,11 +225,8 @@ table.innerHTML+=`
 }
 
 localStorage.setItem(
-
 "feedingHistory",
-
 JSON.stringify(feedingHistory)
-
 )
 
 }
@@ -246,5 +238,7 @@ if(!confirm("確定刪除？")) return
 feedingHistory.splice(index,1)
 
 updateHistory()
+
+render()
 
 }
