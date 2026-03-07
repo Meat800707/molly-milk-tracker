@@ -137,7 +137,7 @@ const now=new Date()
 
 db.collection("feeding").add({
 
-time:now,
+time:now.toISOString(),
 
 amount:calculateMilk()
 
@@ -165,6 +165,7 @@ for(let i=0;i<feedingHistory.length;i++){
 const record=feedingHistory[i]
 
 const d=new Date(record.time)
+if(isNaN(d)) return
 
 const date=d.toLocaleDateString("zh-TW")
 
