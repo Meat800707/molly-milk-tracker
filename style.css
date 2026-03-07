@@ -1,110 +1,136 @@
 body{
 
-background:#1e1e1e;
-color:#eaeaea;
+margin:0;
+padding:0;
 
 font-family:-apple-system,BlinkMacSystemFont;
 
-margin:0;
-padding:0;
+background:linear-gradient(
+180deg,
+#1b1b1b,
+#2d2d2d
+);
+
+color:#eee;
 
 display:flex;
 justify-content:center;
 
 }
 
-.title{
-
-text-align:center;
-font-size:2.2em;
-margin-top:25px;
-
-}
-
 .card{
 
-background:#2a2a2a;
+width:90%;
+max-width:420px;
 
-border-radius:16px;
+margin-top:30px;
+
+background:#2f2f2f;
 
 padding:30px;
 
-margin:20px;
+border-radius:20px;
 
-width:95%;
-max-width:650px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
 
-box-shadow:0 0 20px rgba(0,0,0,0.35);
+}
+
+.title{
+
+text-align:center;
+
+font-size:2.2em;
+
+margin-bottom:25px;
 
 }
 
 p{
 
-text-align:center;
+font-size:1.15em;
 
-font-size:1.3em;
-
-line-height:2em;
+margin:18px 0;
 
 }
 
 button{
 
-background:#4caf50;
+width:100%;
 
-color:white;
+padding:16px;
+
+margin-top:20px;
 
 border:none;
 
-padding:14px 24px;
-
 border-radius:12px;
 
-font-size:1.05em;
+background:#62a85c;
+
+color:white;
+
+font-size:1.1em;
 
 cursor:pointer;
 
-margin-top:10px;
+}
+
+button:active{
+
+transform:scale(0.97);
 
 }
 
 h2{
 
-text-align:center;
+margin-top:35px;
 
-margin-top:30px;
-margin-bottom:15px;
+text-align:center;
 
 }
 
 table{
 
 width:100%;
+
 border-collapse:collapse;
-margin-top:10px;
+
+margin-top:20px;
 
 }
 
 th{
 
-background:#3a3a3a;
+background:#3c3c3c;
+
 padding:12px;
-border-radius:6px;
+
+border-radius:10px;
 
 }
 
 td{
 
-padding:14px 6px;
+padding:14px 8px;
+
 text-align:center;
+
 border-bottom:1px solid #444;
 
 }
 
-td button{
+.deleteBtn{
 
-background:#4caf50;
-padding:6px 12px;
-border-radius:8px;
+background:#62a85c;
+
+border:none;
+
+padding:8px 12px;
+
+border-radius:10px;
+
+color:white;
+
+cursor:pointer;
 
 }

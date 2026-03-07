@@ -1,4 +1,4 @@
-const baby = {
+const baby={
 
 birthday:"2025-12-07",
 
@@ -8,7 +8,9 @@ interval:3.5
 
 }
 
-let feedingHistory=[]
+let feedingHistory=
+
+JSON.parse(localStorage.getItem("feedingHistory"))||[]
 
 let lastClickTime=0
 
@@ -75,7 +77,9 @@ function formatTime(date){
 return date.toLocaleTimeString("zh-TW",{
 
 hour:"2-digit",
+
 minute:"2-digit",
+
 hour12:false
 
 })
@@ -115,6 +119,8 @@ updateHistory()
 
 }
 
+render()
+
 document.getElementById("feedBtn").onclick=function(){
 
 const nowClick=Date.now()
@@ -133,32 +139,17 @@ if(!confirm("確定記錄餵奶時間？"))return
 
 const now=new Date()
 
-db.collection("feeding").add({
+feedingHistory.push({
 
-time:now.toISOString(),
+time:now,
+
 amount:calculateMilk()
 
 })
 
-}
-
-function loadData(){
-
-db.collection("feeding")
-.orderBy("time")
-.onSnapshot(snapshot=>{
-
-feedingHistory=[]
-
-snapshot.forEach(doc=>{
-
-feedingHistory.push(doc.data())
-
-})
+updateHistory()
 
 render()
-
-})
 
 }
 
@@ -175,7 +166,6 @@ table.innerHTML=`
 <th>間隔</th>
 <th>操作</th>
 </tr>
-
 `
 
 for(let i=0;i<feedingHistory.length;i++){
@@ -207,39 +197,40 @@ interval=`${h}h${m}m`
 table.innerHTML+=`
 
 <tr>
+
 <td>${date}</td>
 <td>${time}</td>
 <td>${record.amount}ml</td>
 <td>${interval}</td>
+
 <td>
-<button onclick="deleteRecord('${record.time}')">刪除</button>
+<button class="deleteBtn"
+onclick="deleteRecord(${i})">
+刪除
+</button>
 </td>
+
 </tr>
 
 `
 
 }
 
+localStorage.setItem(
+"feedingHistory",
+JSON.stringify(feedingHistory)
+)
+
 }
 
-window.deleteRecord=function(time){
+window.deleteRecord=function(index){
 
 if(!confirm("確定刪除？"))return
 
-db.collection("feeding")
-.where("time","==",time)
-.get()
-.then(snapshot=>{
+feedingHistory.splice(index,1)
 
-snapshot.forEach(doc=>{
-
-db.collection("feeding").doc(doc.id).delete()
-
-})
-
-})
-
-}
+updateHistory()
 
 render()
-loadData()
+
+}

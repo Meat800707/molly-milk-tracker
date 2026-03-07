@@ -1,50 +1,172 @@
-<!DOCTYPE html>
-<html>
+const baby = {
 
-<head>
+birthday:"2025-12-07",
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+weight:5.8,
 
-<title>Molly瑋珊</title>
+interval:3.5
 
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
+}
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Molly">
+let feedingHistory=[]
 
-<link rel="stylesheet" href="style.css">
+let lastClickTime=0
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+function getAge(){
 
-</head>
+const birth=new Date(baby.birthday)
 
-<body>
+const now=new Date()
 
-<h1 class="title">Molly瑋珊</h1>
+const diff=now-birth
 
-<div class="card">
+const weeks=Math.floor(diff/(1000*60*60*24*7))
 
-<p>年齡 : <span id="age"></span></p>
+const months=Math.floor(weeks/4)
 
-<p>體重 : <span id="weight"></span> 公斤</p>
+const remainWeeks=weeks%4
 
-<p>建議奶量 : <span id="milk"></span> ml</p>
+return `${weeks} 週 (${months} 個月又 ${remainWeeks} 週)`
 
-<p>奶粉匙數 : <span id="powder"></span> 湯匙</p>
+}
 
-<p>最後餵奶時間 : <span id="lastFeed">-</span></p>
+function calculateMilk(){
 
-<p>下次餵奶時間 : <span id="nextFeed">-</span></p>
+const dailyMilk=baby.weight*150
 
-<button id="feedBtn">記錄此次餵奶時間</button>
+const feeds=24/baby.interval
 
-<h2>餵奶紀錄</h2>
+let milk=dailyMilk/feeds
 
-<table id="historyTable">
+milk=Math.round(milk/10)*10
+
+return milk
+
+}
+
+function powderScoops(ml){
+
+let scoops=ml/30
+
+let base=Math.floor(scoops)
+
+let decimal=scoops-base
+
+if(decimal<0.25){
+
+decimal=0
+
+}else if(decimal<0.75){
+
+decimal=0.5
+
+}else{
+
+decimal=1
+
+}
+
+return base+decimal
+
+}
+
+function formatTime(date){
+
+return date.toLocaleTimeString("zh-TW",{
+
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+
+})
+
+}
+
+function render(){
+
+document.getElementById("age").innerText=getAge()
+
+document.getElementById("weight").innerText=baby.weight
+
+const milk=calculateMilk()
+
+document.getElementById("milk").innerText=milk
+
+document.getElementById("powder").innerText=powderScoops(milk)
+
+if(feedingHistory.length>0){
+
+const last=new Date(
+feedingHistory[feedingHistory.length-1].time
+)
+
+document.getElementById("lastFeed").innerText=
+formatTime(last)
+
+const next=
+new Date(last.getTime()+baby.interval*60*60*1000)
+
+document.getElementById("nextFeed").innerText=
+formatTime(next)
+
+}
+
+updateHistory()
+
+}
+
+document.getElementById("feedBtn").onclick=function(){
+
+const nowClick=Date.now()
+
+if(nowClick-lastClickTime<10000){
+
+alert("剛剛已記錄")
+
+return
+
+}
+
+lastClickTime=nowClick
+
+if(!confirm("確定記錄餵奶時間？"))return
+
+const now=new Date()
+
+db.collection("feeding").add({
+
+time:now.toISOString(),
+amount:calculateMilk()
+
+})
+
+}
+
+function loadData(){
+
+db.collection("feeding")
+.orderBy("time")
+.onSnapshot(snapshot=>{
+
+feedingHistory=[]
+
+snapshot.forEach(doc=>{
+
+feedingHistory.push(doc.data())
+
+})
+
+render()
+
+})
+
+}
+
+function updateHistory(){
+
+const table=document.getElementById("historyTable")
+
+table.innerHTML=`
 
 <tr>
 <th>日期</th>
@@ -54,13 +176,70 @@
 <th>操作</th>
 </tr>
 
-</table>
+`
 
-</div>
+for(let i=0;i<feedingHistory.length;i++){
 
-<script src="firebase.js"></script>
-<script src="app.js"></script>
+const record=feedingHistory[i]
 
-</body>
+const d=new Date(record.time)
 
-</html>
+const date=d.toLocaleDateString("zh-TW")
+
+const time=formatTime(d)
+
+let interval="-"
+
+if(i>0){
+
+const prev=new Date(feedingHistory[i-1].time)
+
+const diff=d-prev
+
+const h=Math.floor(diff/(1000*60*60))
+
+const m=Math.floor((diff%(1000*60*60))/(1000*60))
+
+interval=`${h}h${m}m`
+
+}
+
+table.innerHTML+=`
+
+<tr>
+<td>${date}</td>
+<td>${time}</td>
+<td>${record.amount}ml</td>
+<td>${interval}</td>
+<td>
+<button onclick="deleteRecord('${record.time}')">刪除</button>
+</td>
+</tr>
+
+`
+
+}
+
+}
+
+window.deleteRecord=function(time){
+
+if(!confirm("確定刪除？"))return
+
+db.collection("feeding")
+.where("time","==",time)
+.get()
+.then(snapshot=>{
+
+snapshot.forEach(doc=>{
+
+db.collection("feeding").doc(doc.id).delete()
+
+})
+
+})
+
+}
+
+render()
+loadData()
