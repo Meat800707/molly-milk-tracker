@@ -8,9 +8,7 @@ interval:3.5
 
 }
 
-let feedingHistory=
-
-JSON.parse(localStorage.getItem("feedingHistory"))||[]
+let feedingHistory=[]
 
 let lastClickTime=0
 
@@ -119,8 +117,6 @@ updateHistory()
 
 }
 
-render()
-
 document.getElementById("feedBtn").onclick=function(){
 
 const nowClick=Date.now()
@@ -139,17 +135,13 @@ if(!confirm("確定記錄餵奶時間？"))return
 
 const now=new Date()
 
-feedingHistory.push({
+db.collection("feeding").add({
 
 time:now,
 
 amount:calculateMilk()
 
 })
-
-updateHistory()
-
-render()
 
 }
 
@@ -205,7 +197,7 @@ table.innerHTML+=`
 
 <td>
 <button class="deleteBtn"
-onclick="deleteRecord(${i})">
+onclick="deleteRecord('${record.id}')">
 刪除
 </button>
 </td>
@@ -216,21 +208,34 @@ onclick="deleteRecord(${i})">
 
 }
 
-localStorage.setItem(
-"feedingHistory",
-JSON.stringify(feedingHistory)
-)
-
 }
 
-window.deleteRecord=function(index){
+function deleteRecord(id){
 
 if(!confirm("確定刪除？"))return
 
-feedingHistory.splice(index,1)
+db.collection("feeding").doc(id).delete()
 
-updateHistory()
+}
+
+db.collection("feeding")
+.orderBy("time")
+.onSnapshot(snapshot=>{
+
+feedingHistory=[]
+
+snapshot.forEach(doc=>{
+
+feedingHistory.push({
+
+id:doc.id,
+
+...doc.data()
+
+})
+
+})
 
 render()
 
-}
+})
