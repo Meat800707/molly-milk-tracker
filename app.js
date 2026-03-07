@@ -165,7 +165,8 @@ for(let i=0;i<feedingHistory.length;i++){
 const record=feedingHistory[i]
 
 const d=new Date(record.time)
-if(isNaN(d)) return
+
+if(isNaN(d)) continue
 
 const date=d.toLocaleDateString("zh-TW")
 
@@ -177,6 +178,8 @@ if(i>0){
 
 const prev=new Date(feedingHistory[i-1].time)
 
+if(!isNaN(prev)){
+
 const diff=d-prev
 
 const h=Math.floor(diff/(1000*60*60))
@@ -184,6 +187,8 @@ const h=Math.floor(diff/(1000*60*60))
 const m=Math.floor((diff%(1000*60*60))/(1000*60))
 
 interval=`${h}h${m}m`
+
+}
 
 }
 
