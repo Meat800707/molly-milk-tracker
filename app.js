@@ -304,21 +304,25 @@ window.deleteRecord=function(time){
 
 if(!confirm("確定刪除？")) return
 
-
-
 db.collection("feeding")
-
 .where("time","==",time)
-
 .get()
-
 .then(snapshot=>{
 
 snapshot.forEach(doc=>{
 
-db.collection("feeding").doc(doc.id).delete()
+db.collection("feeding")
+.doc(doc.id)
+.delete()
 
 })
+
+})
+.catch(error=>{
+
+alert("刪除失敗")
+
+console.log(error)
 
 })
 

@@ -1,160 +1,331 @@
-body{
+const baby = {
 
-background:#1e1e1e;
-color:#eaeaea;
+birthday:"2025-12-07",
 
-font-family:-apple-system,BlinkMacSystemFont;
+weight:5.8,
 
-font-size:90%;
-
-margin:0;
-padding:0;
-
-display:flex;
-justify-content:center;
-
-}
-table{
-
-width:100%;
-border-collapse:collapse;
+interval:3.5
 
 }
 
-th,td{
+let feedingHistory = []
 
-padding:12px 6px;
+let lastClickTime = 0
 
-text-align:center;
 
-font-size:0.95em;
 
-}
+function getAge(){
 
-.title{
+const birth = new Date(baby.birthday)
 
-font-size:42px;
+const now = new Date()
 
-margin-top:25px;
+const diff = now - birth
 
-font-weight:700;
+const weeks = Math.floor(diff/(1000*60*60*24*7))
 
-color:#ffffff;
+const months = Math.floor(weeks/4)
 
-}
+const remainWeeks = weeks%4
 
-.card{
-
-background:#2a2a2a;
-
-padding:40px;
-
-margin:auto;
-
-margin-top:20px;
-
-width:92%;
-
-max-width:900px;
-
-border-radius:16px;
-
-box-shadow:0 6px 30px rgba(0,0,0,0.6);
+return `${weeks} 週 (${months} 個月又 ${remainWeeks} 週)`
 
 }
 
-p{
 
-font-size:22px;
 
-margin:20px 0;
+function calculateMilk(){
 
-color:#e0e0e0;
+const dailyMilk = baby.weight*150
 
-}
+const feeds = 24/baby.interval
 
-button{
+let milk = dailyMilk/feeds
 
-font-size:22px;
+milk = Math.round(milk/10)*10
 
-padding:14px 30px;
-
-border:none;
-
-border-radius:10px;
-
-background:#3aa655;
-
-color:white;
-
-cursor:pointer;
-
-margin-top:10px;
+return milk
 
 }
 
-button:hover{
 
-background:#2f8f48;
 
-}
+function powderScoops(ml){
 
-table{
+let scoops = ml/30
 
-width:100%;
+let base = Math.floor(scoops)
 
-margin-top:30px;
+let decimal = scoops-base
 
-border-collapse:collapse;
+if(decimal<0.25){
 
-font-size:20px;
+decimal=0
 
-}
+}else if(decimal<0.75){
 
-th{
+decimal=0.5
 
-padding:14px;
+}else{
 
-background:#333333;
-
-color:#ffffff;
+decimal=1
 
 }
 
-td{
-
-padding:16px;
-
-border-bottom:1px solid #3a3a3a;
+return base+decimal
 
 }
 
-h2{
 
-margin-top:30px;
 
-color:#ffffff;
+function formatTime(date){
 
-}
+return date.toLocaleTimeString("zh-TW",{
 
-@media (max-width:600px){
+hour:"2-digit",
 
-.title{
+minute:"2-digit",
 
-font-size:34px;
+hour12:false
 
-}
-
-p{
-
-font-size:20px;
+})
 
 }
 
-button{
 
-font-size:20px;
+
+function render(){
+
+document.getElementById("age").innerText=getAge()
+
+document.getElementById("weight").innerText=baby.weight
+
+const milk=calculateMilk()
+
+document.getElementById("milk").innerText=milk
+
+document.getElementById("powder").innerText=powderScoops(milk)
+
+
+
+if(feedingHistory.length>0){
+
+const last=new Date(
+
+feedingHistory[feedingHistory.length-1].time
+
+)
+
+document.getElementById("lastFeed").innerText=
+
+formatTime(last)
+
+
+
+const next=
+
+new Date(last.getTime()+baby.interval*60*60*1000)
+
+document.getElementById("nextFeed").innerText=
+
+formatTime(next)
+
+}
+
+
+
+updateHistory()
+
+}
+
+
+
+document.getElementById("feedBtn").onclick=function(){
+
+const nowClick = Date.now()
+
+
+
+if(nowClick - lastClickTime < 10000){
+
+alert("剛剛已記錄")
+
+return
+
+}
+
+
+
+lastClickTime = nowClick
+
+
+
+if(!confirm("確定記錄餵奶時間？")) return
+
+
+
+const now=new Date()
+
+
+
+db.collection("feeding").add({
+
+time: now.toISOString(),
+
+amount: calculateMilk()
+
+})
+
+}
+
+
+
+function loadData(){
+
+db.collection("feeding")
+
+.orderBy("time")
+
+.onSnapshot(snapshot=>{
+
+feedingHistory=[]
+
+
+
+snapshot.forEach(doc=>{
+
+feedingHistory.push(doc.data())
+
+})
+
+
+
+render()
+
+})
+
+}
+
+
+
+function updateHistory(){
+
+const table=document.getElementById("historyTable")
+
+
+
+table.innerHTML=`
+
+<tr>
+
+<th>日期</th>
+
+<th>時間</th>
+
+<th>毫升</th>
+
+<th>間隔</th>
+
+<th>操作</th>
+
+</tr>
+
+`
+
+
+
+for(let i=0;i<feedingHistory.length;i++){
+
+const record=feedingHistory[i]
+
+const d=new Date(record.time)
+
+
+
+const date=d.toLocaleDateString("zh-TW")
+
+const time=formatTime(d)
+
+
+
+let interval="-"
+
+
+
+if(i>0){
+
+const prev=new Date(feedingHistory[i-1].time)
+
+const diff=d-prev
+
+
+
+const h=Math.floor(diff/(1000*60*60))
+
+const m=Math.floor((diff%(1000*60*60))/(1000*60))
+
+
+
+interval=`${h}h${m}m`
+
+}
+
+
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${date}</td>
+
+<td>${time}</td>
+
+<td>${record.amount}ml</td>
+
+<td>${interval}</td>
+
+<td>
+
+<button onclick="deleteRecord('${record.time}')">刪除</button>
+
+</td>
+
+</tr>
+
+`
 
 }
 
 }
+
+
+
+window.deleteRecord=function(time){
+
+if(!confirm("確定刪除？")) return
+
+
+
+db.collection("feeding")
+
+.where("time","==",time)
+
+.get()
+
+.then(snapshot=>{
+
+snapshot.forEach(doc=>{
+
+db.collection("feeding").doc(doc.id).delete()
+
+})
+
+})
+
+}
+
+
+
+render()
+
+loadData()
