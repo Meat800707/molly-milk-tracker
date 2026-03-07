@@ -7,36 +7,46 @@ justify-content:center;
 padding:20px;
 }
 
+/* 卡片 */
 .card{
 background:#2b2b2b;
 padding:25px;
 border-radius:20px;
 max-width:420px;
 width:100%;
+position:relative;
+overflow:visible;
 }
 
+/* 標題 */
 .title{
 text-align:center;
 margin-bottom:20px;
 }
 
+/* 上方區域 */
 .top{
 display:flex;
-align-items:flex-start;
+align-items:stretch;
 justify-content:space-between;
 gap:10px;
 }
 
-/* 左邊資訊 */
+/* 左側資訊 */
 .info{
 flex:1;
+z-index:2;
 }
 
-/* 右邊圖片區塊 */
+/* Molly照片 */
 .baby{
-width:120px;
-height:160px;
+height:100%;
+width:160px;
 object-fit:contain;
+position:absolute;
+right:-10px;
+top:70px;
+pointer-events:none;
 }
 
 /* 文字 */
@@ -56,12 +66,13 @@ border-radius:14px;
 margin-top:20px;
 }
 
-/* 餵奶紀錄 */
+/* 標題 */
 h2{
 margin-top:30px;
 text-align:center;
 }
 
+/* 表格 */
 table{
 width:100%;
 margin-top:15px;
