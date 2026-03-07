@@ -1,7 +1,3 @@
-<script src="firebase.js"></script>
-<script src="app.js"></script>
-
-
 const baby = {
 
 birthday:"2025-12-07",
@@ -12,10 +8,7 @@ interval:3.5
 
 }
 
-let feedingHistory =
-JSON.parse(localStorage.getItem("feedingHistory")) || []
-
-let lastClickTime = 0
+let feedingHistory=[]
 
 function getAge(){
 
@@ -122,37 +115,37 @@ updateHistory()
 
 }
 
+function loadData(){
+
+db.collection("feeding")
+.orderBy("time")
+.onSnapshot((snapshot)=>{
+
+feedingHistory=[]
+
+snapshot.forEach((doc)=>{
+
+feedingHistory.push(doc.data())
+
+})
+
 render()
 
-document.getElementById("feedBtn").onclick=function(){
-
-const nowClick = Date.now()
-
-if(nowClick - lastClickTime < 10000){
-
-alert("剛剛已記錄")
-
-return
+})
 
 }
 
-lastClickTime = nowClick
-
-if(!confirm("確定記錄餵奶時間？")) return
+document.getElementById("feedBtn").onclick=function(){
 
 const now=new Date()
 
-feedingHistory.push({
+db.collection("feeding").add({
 
-time:now,
+time:now.getTime(),
 
 amount:calculateMilk()
 
 })
-
-updateHistory()
-
-render()
 
 }
 
@@ -216,7 +209,7 @@ table.innerHTML+=`
 
 <td>${interval}</td>
 
-<td><button onclick="deleteRecord(${i})">刪除</button></td>
+<td></td>
 
 </tr>
 
@@ -224,21 +217,6 @@ table.innerHTML+=`
 
 }
 
-localStorage.setItem(
-"feedingHistory",
-JSON.stringify(feedingHistory)
-)
-
 }
 
-window.deleteRecord=function(index){
-
-if(!confirm("確定刪除？")) return
-
-feedingHistory.splice(index,1)
-
-updateHistory()
-
-render()
-
-}
+loadData()
