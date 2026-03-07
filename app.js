@@ -8,7 +8,11 @@ interval:3.5
 
 }
 
-let feedingHistory=[]
+let feedingHistory = []
+
+let lastClickTime = 0
+
+
 
 function getAge(){
 
@@ -28,6 +32,8 @@ return `${weeks} 週 (${months} 個月又 ${remainWeeks} 週)`
 
 }
 
+
+
 function calculateMilk(){
 
 const dailyMilk = baby.weight*150
@@ -41,6 +47,8 @@ milk = Math.round(milk/10)*10
 return milk
 
 }
+
+
 
 function powderScoops(ml){
 
@@ -68,6 +76,8 @@ return base+decimal
 
 }
 
+
+
 function formatTime(date){
 
 return date.toLocaleTimeString("zh-TW",{
@@ -82,6 +92,8 @@ hour12:false
 
 }
 
+
+
 function render(){
 
 document.getElementById("age").innerText=getAge()
@@ -94,40 +106,99 @@ document.getElementById("milk").innerText=milk
 
 document.getElementById("powder").innerText=powderScoops(milk)
 
+
+
 if(feedingHistory.length>0){
 
 const last=new Date(
+
 feedingHistory[feedingHistory.length-1].time
+
 )
 
 document.getElementById("lastFeed").innerText=
+
 formatTime(last)
 
+
+
 const next=
+
 new Date(last.getTime()+baby.interval*60*60*1000)
 
 document.getElementById("nextFeed").innerText=
+
 formatTime(next)
 
 }
+
+
 
 updateHistory()
 
 }
 
+
+
+document.getElementById("feedBtn").onclick=function(){
+
+const nowClick = Date.now()
+
+
+
+if(nowClick - lastClickTime < 10000){
+
+alert("剛剛已記錄")
+
+return
+
+}
+
+
+
+lastClickTime = nowClick
+
+
+
+if(!confirm("確定記錄餵奶時間？")) return
+
+
+
+const now=new Date()
+
+
+
+db.collection("feeding").add({
+
+time: now.toISOString(),
+
+amount: calculateMilk()
+
+})
+
+}
+
+
+
 function loadData(){
 
 db.collection("feeding")
+
 .orderBy("time")
-.onSnapshot((snapshot)=>{
+
+.onSnapshot(snapshot=>{
 
 feedingHistory=[]
 
-snapshot.forEach((doc)=>{
+
+
+snapshot.forEach(doc=>{
 
 feedingHistory.push(doc.data())
 
 })
+
+
 
 render()
 
@@ -135,23 +206,13 @@ render()
 
 }
 
-document.getElementById("feedBtn").onclick=function(){
 
-const now=new Date()
-
-db.collection("feeding").add({
-
-time:now.getTime(),
-
-amount:calculateMilk()
-
-})
-
-}
 
 function updateHistory(){
 
 const table=document.getElementById("historyTable")
+
+
 
 table.innerHTML=`
 
@@ -171,17 +232,25 @@ table.innerHTML=`
 
 `
 
+
+
 for(let i=0;i<feedingHistory.length;i++){
 
 const record=feedingHistory[i]
 
 const d=new Date(record.time)
 
+
+
 const date=d.toLocaleDateString("zh-TW")
 
 const time=formatTime(d)
 
+
+
 let interval="-"
+
+
 
 if(i>0){
 
@@ -189,13 +258,19 @@ const prev=new Date(feedingHistory[i-1].time)
 
 const diff=d-prev
 
+
+
 const h=Math.floor(diff/(1000*60*60))
 
 const m=Math.floor((diff%(1000*60*60))/(1000*60))
 
+
+
 interval=`${h}h${m}m`
 
 }
+
+
 
 table.innerHTML+=`
 
@@ -209,7 +284,11 @@ table.innerHTML+=`
 
 <td>${interval}</td>
 
-<td></td>
+<td>
+
+<button onclick="deleteRecord('${record.time}')">刪除</button>
+
+</td>
 
 </tr>
 
@@ -218,5 +297,35 @@ table.innerHTML+=`
 }
 
 }
+
+
+
+window.deleteRecord=function(time){
+
+if(!confirm("確定刪除？")) return
+
+
+
+db.collection("feeding")
+
+.where("time","==",time)
+
+.get()
+
+.then(snapshot=>{
+
+snapshot.forEach(doc=>{
+
+db.collection("feeding").doc(doc.id).delete()
+
+})
+
+})
+
+}
+
+
+
+render()
 
 loadData()
